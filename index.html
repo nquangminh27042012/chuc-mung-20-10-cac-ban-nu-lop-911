@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tiny - Chúc mừng 20/10</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #000000;
+      font-family: 'Courier New', Courier, monospace;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      position: relative;
+    }
+
+    /* Bầu trời sao nền lung linh */
+    #tiny-sky {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      overflow: hidden;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 1.6s ease-in-out, visibility 1.6s;
+    }
+    #tiny-sky.hien-thi {
+      opacity: 1;
+      visibility: visible;
+    }
+    .tiny-star {
+      position: absolute;
+      width: var(--size);
+      height: var(--size);
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 6px 1px rgba(220, 244, 255, .65);
+      animation: tinyTwinkle var(--twinkle) ease-in-out var(--delay) infinite alternate;
+    }
+    @keyframes tinyTwinkle {
+      from { opacity: .18; transform: scale(.65); }
+      to { opacity: .95; transform: scale(1.25); }
+    }
+
+    /* Sao băng */
+    .tiny-meteor {
+      position: absolute;
+      width: 100px;
+      height: 2px;
+      opacity: 0;
+      background: linear-gradient(to right, rgba(255,255,255,.98) 0%, rgba(130,200,255,0) 100%);
+      transform: rotate(-25deg);
+      animation: tinyMeteor 4s linear infinite;
+    }
+    @keyframes tinyMeteor {
+      0% { opacity: 0; transform: translate(0, 0) rotate(-25deg); }
+      20% { opacity: 1; }
+      40% { opacity: 0; transform: translate(-300px, 300px) rotate(-25deg); }
+      100% { opacity: 0; }
+    }
+
+    #bg-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      transition: background 1.5s ease;
+      z-index: 2;
+    }
+
+    /* LỚP PHỦ MƯA ICON ĐẰNG SAU (TRÁNH VÙNG CHỮ) */
+    #floating-icons-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .floating-icon {
+      position: absolute;
+      font-size: var(--icon-size);
+      opacity: 0;
+      animation: floatRandomvar var(--float-duration) ease-in-out infinite var(--float-delay);
+      user-select: none;
+    }
+    @keyframes floatRandomvar {
+      0% {
+        transform: translate(0, 0) scale(0.6) rotate(0deg);
+        opacity: 0;
+      }
+      25% {
+        opacity: var(--icon-opacity);
+      }
+      50% {
+        transform: translate(var(--move-x), var(--move-y)) scale(1.1) rotate(180deg);
+        opacity: var(--icon-opacity);
+      }
+      75% {
+        opacity: var(--icon-opacity);
+      }
+      100% {
+        transform: translate(calc(var(--move-x) * 1.5), calc(var(--move-y) * 1.5)) scale(0.7) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    /* Ảnh nền minh họa góc phải */
+    #bg-image-container {
+      position: absolute;
+      bottom: 0;
+      right: 2vw;
+      height: 80vh;
+      width: 45vw;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      z-index: 4;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 1.2s ease-in-out, transform 1.2s ease-out;
+    }
+    #bg-image-container.hien-thi {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    #bg-image-aura {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 180, 220, 0.45) 0%, rgba(0, 243, 255, 0.2) 50%, rgba(0,0,0,0) 75%);
+      filter: blur(25px);
+      animation: auraGlow 3s infinite alternate ease-in-out;
+    }
+    #bg-image {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: bottom right;
+      z-index: 2;
+      filter: drop-shadow(0 0 15px rgba(255, 200, 255, 0.6));
+    }
+
+    /* BIỂU TƯỢNG TRUNG TÂM PHÁT SÁNG (AURA) */
+    .element-wrapper {
+      position: absolute;
+      transform: translate(-50%, -50%) scale(0.8);
+      width: 180px;
+      height: 180px;
+      opacity: 0;
+      transition: opacity 0.6s ease-in-out, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 6;
+      pointer-events: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .element-wrapper.hien-thi {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .aura-clover {
+      position: absolute; width: 100%; height: 100%; border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 255, 136, 0.65) 0%, rgba(0, 180, 80, 0.25) 55%, rgba(0,0,0,0) 75%);
+      filter: blur(20px); animation: auraPulse 2s infinite alternate ease-in-out;
+    }
+    .aura-star {
+      position: absolute; width: 100%; height: 100%; border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 220, 0, 0.7) 0%, rgba(255, 140, 0, 0.3) 55%, rgba(0,0,0,0) 75%);
+      filter: blur(22px); animation: auraRotate 4s infinite linear;
+    }
+    .aura-heart {
+      position: absolute; width: 100%; height: 100%; border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 50, 120, 0.75) 0%, rgba(200, 0, 80, 0.3) 55%, rgba(0,0,0,0) 75%);
+      filter: blur(20px); animation: auraHeartbeat 1.2s infinite alternate ease-in-out;
+    }
+    .aura-flower {
+      position: absolute; width: 100%; height: 100%; border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 150, 200, 0.7) 0%, rgba(180, 80, 220, 0.3) 55%, rgba(0,0,0,0) 75%);
+      filter: blur(22px); animation: auraPulse 2.5s infinite alternate ease-in-out;
+    }
+
+    @keyframes auraPulse {
+      0% { transform: scale(0.9); opacity: 0.7; }
+      100% { transform: scale(1.15); opacity: 1; }
+    }
+    @keyframes auraRotate {
+      0% { transform: rotate(0deg) scale(0.95); opacity: 0.8; }
+      50% { transform: rotate(180deg) scale(1.1); opacity: 1; }
+      100% { transform: rotate(360deg) scale(0.95); opacity: 0.8; }
+    }
+    @keyframes auraHeartbeat {
+      0% { transform: scale(0.88); opacity: 0.75; }
+      100% { transform: scale(1.18); opacity: 1; }
+    }
+    @keyframes auraGlow {
+      0% { opacity: 0.6; transform: scale(0.95); }
+      100% { opacity: 0.95; transform: scale(1.05); }
+    }
+
+    .custom-icon {
+      position: relative;
+      font-size: 75px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2;
+      user-select: none;
+    }
+
+    #big-clover {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      z-index: 2;
+    }
+    .clover-leaf {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #00ff88, #00cc55);
+      border-radius: 50% 50% 20% 50%;
+      box-shadow: 0 0 25px rgba(0, 255, 128, 0.9);
+    }
+    .clover-leaf:nth-child(1) { top: 8px; left: 38px; transform: rotate(-45deg); }
+    .clover-leaf:nth-child(2) { top: 38px; left: 68px; transform: rotate(45deg); }
+    .clover-leaf:nth-child(3) { top: 68px; left: 38px; transform: rotate(135deg); }
+    .clover-leaf:nth-child(4) { top: 38px; left: 8px; transform: rotate(225deg); }
+    .clover-stem {
+      position: absolute;
+      bottom: -2px;
+      left: 65px;
+      width: 5px;
+      height: 45px;
+      background: #00aa44;
+      border-radius: 4px;
+    }
+
+    .container {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      width: 100%;
+      height: 100%;
+    }
+
+    .text-box {
+      position: absolute;
+      font-size: 24px;
+      font-weight: bold;
+      text-shadow: 0 0 15px rgba(255, 255, 255, 0.9), 0 0 30px rgba(0, 243, 255, 0.6);
+      max-width: 480px;
+      line-height: 1.5;
+      padding: 0 15px;
+      z-index: 10;
+    }
+
+    .hint {
+      position: absolute;
+      bottom: 20px;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.4);
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    .face-container {
+      display: flex;
+      gap: 30px;
+      position: absolute;
+      align-items: center;
+      justify-content: center;
+      height: 150px;
+      transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 5;
+    }
+
+    /* ĐÔI MẮT ROBOT VỚI BỘ HIỆU ỨNG ĐA DẠNG CỰC KỲ */
+    .eye {
+      width: 150px;
+      height: 150px;
+      background-color: #00f3ff;
+      border-radius: 35px;
+      box-shadow: 0 0 35px #00f3ff, 0 0 70px #00f3ff, inset 0 0 30px rgba(255, 255, 255, 0.8);
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s ease;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .blush {
+      position: absolute;
+      bottom: -26px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      font-size: 22px;
+      font-weight: 900;
+      color: #ff4d88;
+      text-shadow: 0 0 10px #ff3377;
+      letter-spacing: 6px;
+      font-family: Arial, sans-serif;
+      user-select: none;
+      animation: blushGlow 0.8s infinite alternate ease-in-out;
+    }
+
+    @keyframes blushGlow {
+      0% { opacity: 0.7; transform: translateX(-50%) scale(0.95); }
+      100% { opacity: 1; transform: translateX(-50%) scale(1.05); }
+    }
+
+    .eye.shy-animation {
+      animation: shyShake 1s infinite ease-in-out;
+    }
+
+    @keyframes shyShake {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      25% { transform: translateY(4px) rotate(-4deg); }
+      75% { transform: translateY(-3px) rotate(4deg); }
+    }
+
+    /* Mắt chớp */
+    .eye.blink {
+      height: 12px !important;
+      border-radius: 6px !important;
+      box-shadow: 0 0 20px #00f3ff;
+    }
+
+    /* Mắt cười */
+    .eye.happy {
+      height: 110px;
+      border-radius: 55px 55px 20px 20px;
+    }
+
+    /* Mắt sao xoay */
+    .eye.star::after {
+      content: '★';
+      font-size: 80px;
+      color: #ffffff;
+      text-shadow: 0 0 20px #ffffff, 0 0 40px #00f3ff;
+      animation: starSpin 3s infinite linear;
+    }
+    @keyframes starSpin {
+      0% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(180deg) scale(1.12); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+
+    /* Mắt trái tim */
+    .eye.heart::after {
+      content: '❤️';
+      font-size: 70px;
+      animation: heartBeat 0.8s infinite alternate ease-in-out;
+    }
+    @keyframes heartBeat {
+      0% { transform: scale(0.9); }
+      100% { transform: scale(1.18); }
+    }
+
+    /* Mắt nháy */
+    .eye.wink-left {
+      height: 90px;
+      border-radius: 65px 65px 16px 16px;
+    }
+
+    /* Mắt bất ngờ */
+    .eye.surprised {
+      width: 165px;
+      height: 165px;
+      border-radius: 50%;
+      box-shadow: 0 0 45px #00f3ff, 0 0 90px #00f3ff, inset 0 0 35px rgba(255, 255, 255, 0.9);
+    }
+
+    /* Mắt rưng rưng / giọt nước mắt */
+    .eye.cry::after {
+      content: '💧';
+      font-size: 55px;
+      position: absolute;
+      bottom: -20px;
+      animation: tearDrop 1.2s infinite ease-in;
+    }
+    @keyframes tearDrop {
+      0% { transform: translateY(-10px); opacity: 1; }
+      100% { transform: translateY(35px); opacity: 0; }
+    }
+
+    /* Mắt lốc xoáy / say đắm */
+    .eye.dizzy::after {
+      content: '🌀';
+      font-size: 75px;
+      animation: dizzySpin 1.5s infinite linear;
+    }
+    @keyframes dizzySpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Mắt lấp lánh tinh nghịch */
+    .eye.sparkle::after {
+      content: '✨';
+      font-size: 75px;
+      animation: sparkleGlow 1s infinite alternate ease-in-out;
+    }
+    @keyframes sparkleGlow {
+      0% { transform: scale(0.8); opacity: 0.6; }
+      100% { transform: scale(1.2); opacity: 1; }
+    }
+
+    /* Mắt ngầu đeo kính mát */
+    .eye.cool::after {
+      content: '🕶️';
+      font-size: 85px;
+    }
+
+    /* Mắt rực lửa hưng phấn */
+    .eye.fire::after {
+      content: '🔥';
+      font-size: 75px;
+      animation: fireFlicker 0.6s infinite alternate ease-in-out;
+    }
+    @keyframes fireFlicker {
+      0% { transform: scale(0.9) translateY(0); }
+      100% { transform: scale(1.15) translateY(-5px); }
+    }
+
+    #start-btn {
+      position: absolute;
+      z-index: 100;
+      padding: 16px 34px;
+      font-size: 20px;
+      background-color: #00f3ff;
+      color: #000;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 0 20px #00f3ff;
+      transition: transform 0.2s;
+    }
+
+    #start-btn:hover {
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+<body>
+
+  <button id="start-btn">Nhấn vào đây để xem ❤️</button>
+
+  <div id="tiny-sky"></div>
+  <div id="floating-icons-bg"></div>
+  <div id="bg-layer"></div>
+  
+  <div id="bg-image-container">
+    <div id="bg-image-aura"></div>
+    <div id="bg-image"></div>
+  </div>
+  
+  <div class="element-wrapper" id="dynamic-element-wrapper">
+    <div id="dynamic-aura" class="aura-clover"></div>
+    <div id="dynamic-content"></div>
+  </div>
+
+  <div class="container" id="main-content" style="display: none;">
+    <div class="text-box" id="text-display"></div>
+    
+    <div class="face-container" id="face-container">
+      <div class="eye left" id="eye-left">
+        <div class="blush" id="blush-left">////</div>
+      </div>
+      <div class="eye right" id="eye-right">
+        <div class="blush" id="blush-right">////</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hint" id="hint-text" style="display: none;">(Click chuột bất kỳ đâu để tiếp tục...)</div>
+
+  <script>
+    const skyContainer = document.getElementById('tiny-sky');
+    for (let i = 0; i < 60; i++) {
+      const star = document.createElement('div');
+      star.className = 'tiny-star';
+      star.style.setProperty('--size', `${Math.random() * 3 + 1}px`);
+      star.style.setProperty('--twinkle', `${Math.random() * 3 + 2}s`);
+      star.style.setProperty('--delay', `${Math.random() * 5}s`);
+      star.style.top = `${Math.random() * 100}%`;
+      star.style.left = `${Math.random() * 100}%`;
+      skyContainer.appendChild(star);
+    }
+
+    for (let j = 0; j < 3; j++) {
+      const meteor = document.createElement('div');
+      meteor.className = 'tiny-meteor';
+      meteor.style.top = `${Math.random() * 50}%`;
+      meteor.style.left = `${Math.random() * 80 + 20}%`;
+      meteor.style.animationDelay = `${j * 3}s`;
+      skyContainer.appendChild(meteor);
+    }
+
+    const audio1 = new Audio('nhac1.mp3');
+    audio1.loop = true;
+    
+    const audio2 = new Audio('nhac2.mp3');
+    audio2.loop = true;
+
+    const iconThemes = {
+      default: ["✨", "💫", "⭐", "🌟", "☁️", "🎈", "🎉", "🔮", "🌙", "☄️", "🪄", "🎀"],
+      love: ["❤️", "💖", "💕", "💗", "💓", "💘", "💝", "💞", "💌", "❣️", "🌹", "🌺", "🎀", "✨"],
+      flower: ["🌸", "🌺", "🌷", "🌻", "🌼", "💐", "🌹", "🪷", "🥀", "🌾", "🌿", "🍃", "🎀", "✨"],
+      clover: ["🍀", "🌿", "🌱", "☘️", "🍃", "💚", "🟢", "🌵", "🌴", "🌲", "🍀", "✨"],
+      star: ["★", "⭐", "🌟", "💫", "✨", "🔥", "💥", "⚡", "🔮", "🎇", "🎆", "✨"]
+    };
+
+    function spawnFloatingIcons(themeKey = "default", pos = "top") {
+      const container = document.getElementById('floating-icons-bg');
+      container.innerHTML = ""; 
+      const iconsArray = iconThemes[themeKey] || iconThemes.default;
+
+      let forbiddenXMin = 25, forbiddenXMax = 75;
+      let forbiddenYMin = 10, forbiddenYMax = 35;
+
+      if (pos === "top") {
+        forbiddenYMin = 8; forbiddenYMax = 35;
+        forbiddenXMin = 20; forbiddenXMax = 80;
+      } else if (pos === "bottom") {
+        forbiddenYMin = 65; forbiddenYMax = 90;
+        forbiddenXMin = 20; forbiddenXMax = 80;
+      } else if (pos === "left") {
+        forbiddenYMin = 25; forbiddenYMax = 75;
+        forbiddenXMin = 5; forbiddenXMax = 45;
+      } else if (pos === "right") {
+        forbiddenYMin = 25; forbiddenYMax = 75;
+        forbiddenXMin = 55; forbiddenXMax = 95;
+      }
+
+      for (let k = 0; k < 35; k++) {
+        let posX, posY;
+        let attempts = 0;
+
+        do {
+          posX = Math.random() * 92 + 4;
+          posY = Math.random() * 90 + 5;
+          attempts++;
+        } while (
+          posX >= forbiddenXMin && posX <= forbiddenXMax &&
+          posY >= forbiddenYMin && posY <= forbiddenYMax &&
+          attempts < 50
+        );
+
+        const span = document.createElement('span');
+        span.className = 'floating-icon';
+        span.innerText = iconsArray[Math.floor(Math.random() * iconsArray.length)];
+        
+        span.style.left = `${posX}%`;
+        span.style.top = `${posY}%`;
+        span.style.setProperty('--icon-size', `${Math.random() * 22 + 16}px`);
+        span.style.setProperty('--icon-opacity', `${Math.random() * 0.45 + 0.25}`);
+        
+        const moveX = `${(Math.random() - 0.5) * 80}px`;
+        const moveY = `${(Math.random() - 0.5) * 80}px`;
+        span.style.setProperty('--move-x', moveX);
+        span.style.setProperty('--move-y', moveY);
+
+        span.style.setProperty('--float-duration', `${Math.random() * 4 + 4}s`);
+        span.style.setProperty('--float-delay', `${Math.random() * 3}s`);
+        
+        container.appendChild(span);
+      }
+    }
+
+    // KỊCH BẢN KẾT HỢP DÙNG ĐẦY ĐỦ BỘ 12 HIỆU ỨNG MẮT ĐA DẠNG
+    const script = [
+      { text: "Chào các cậu, tớ là Tiny đẹp trai nò 🤖✨", bg: "#050505", eyeState: "happy", track: 1, pos: "top", showSky: false, iconTheme: "star" },
+      { text: "Hôm nay được giao nhiệm vụ từ đám con trai tổng tài lớp 9.11... 📋👀", bg: "#050505", eyeState: "surprised", track: 1, pos: "bottom", showSky: false, iconTheme: "default" },
+      { text: "Nhìn ngang nhìn dọc thấy công nhận cậu dễ thương ghê 😳✨", bg: "radial-gradient(circle, #2a081a 0%, #050505 100%)", eyeState: "blush", track: 1, pos: "top", showSky: false, iconTheme: "love" },
+      { text: "Hôm nay trông xinh gái quá ta ơi 🌸✨💖", bg: "radial-gradient(circle, #3a0820 0%, #050505 100%)", eyeState: "sparkle", track: 1, pos: "left", showSky: false, showElement: "big-flower", iconTheme: "flower" },
+      { text: "Chớp mắt cái là sắp đến 20/10 rồi đấy 📅🌷", bg: "linear-gradient(to top, #1a2a08, #050505)", eyeState: "wink", track: 1, pos: "right", img: "anh_cua_ban.png", showSky: false, iconTheme: "flower" },
+      { text: "Nên tớ ngoi lên đây để gửi ít lời chúc nè ☁️✨", bg: "radial-gradient(circle, #081a2a 0%, #050505 100%)", eyeState: "cool", track: 1, pos: "top", showSky: true, iconTheme: "default" },
+      
+      { text: "Nghe này, tớ nhắn cái này quan trọng lắm nhó... 💭💕", bg: "radial-gradient(circle, #081a2a 0%, #050505 100%)", eyeState: "fire", track: 2, pos: "top", showSky: true, showElement: "big-star", iconTheme: "star" },
+      { text: "Đầu tiên là chúc các cậu luôn khỏe mạnh, ăn ngon ngủ ngon nha 🌿💪🏻❤️", bg: "radial-gradient(circle, #2a0820 0%, #050505 100%)", eyeState: "happy", track: 2, pos: "bottom", showSky: false, showElement: "big-heart", iconTheme: "love" },
+      { text: "Lúc nào cũng xinh xắn và đáng yêu thế này mãi thôi 🌺👑✨", bg: "radial-gradient(circle, #20082a 0%, #050505 100%)", eyeState: "heart", track: 2, pos: "left", showSky: false, showElement: "big-flower", iconTheme: "flower" },
+      { text: "Mong rằng mỗi ngày thức dậy, các cậu đều tìm thấy thật nhiều niềm vui nho nhỏ 🌅☕✨", bg: "radial-gradient(circle, #1a1a3a 0%, #050505 100%)", eyeState: "dizzy", track: 2, pos: "top", showSky: true, showElement: "big-star", iconTheme: "star" },
+      { text: "Dù bài tập có nhiều hay áp lực thế nào thì nhớ giữ nụ cười tươi rói nha 😄🌟💖", bg: "radial-gradient(circle, #10082a 0%, #050505 100%)", eyeState: "blush", track: 2, pos: "bottom", showSky: false, showElement: "big-heart", iconTheme: "love" },
+      { text: "Xung quanh cậu luôn có những người yêu thương và đồng hành cùng các cậu đấy 🤗🌻✨", bg: "radial-gradient(circle, #2a1a08 0%, #050505 100%)", eyeState: "sparkle", track: 2, pos: "left", showSky: true, showElement: "clover", iconTheme: "clover" },
+      
+      { text: "Tớ gửi tặng cậu nhánh cỏ 4 lá may mắn này nè 🍀✨", bg: "radial-gradient(circle, #082a10 0%, #050505 100%)", eyeState: "star", track: 2, pos: "bottom", showSky: false, showElement: "clover", iconTheme: "clover" },
+      { text: "Nhận đi nè, đừng ngại nhé 🤲🏻🍀💚", bg: "radial-gradient(circle, #082a10 0%, #050505 100%)", eyeState: "wink", track: 2, pos: "bottom", showSky: false, showElement: "clover", iconTheme: "clover" },
+      { text: "Chiếc lá thứ nhất đại diện cho Niềm Tin 🌿✨", bg: "radial-gradient(circle, #0b3d18 0%, #050505 100%)", eyeState: "happy", track: 2, pos: "bottom", showSky: false, showElement: "clover", iconTheme: "clover" },
+      { text: "Chiếc lá thứ hai là Hy Vọng 🌟✨", bg: "radial-gradient(circle, #0b3d18 0%, #050505 100%)", eyeState: "star", track: 2, pos: "bottom", showSky: false, showElement: "clover", iconTheme: "clover" },
+      { text: "Chiếc lá thứ ba dành cho Tình Yêu Thương 💕✨", bg: "radial-gradient(circle, #0b3d18 0%, #050505 100%)", eyeState: "heart", track: 2, pos: "bottom", showSky: false, showElement: "big-heart", iconTheme: "love" },
+      { text: "Và chiếc lá thứ tư chính là sự May Mắn trọn vẹn dành riêng cho cậu 🌈🍀✨", bg: "radial-gradient(circle, #0b3d18 0%, #050505 100%)", eyeState: "blush", track: 2, pos: "bottom", showSky: false, showElement: "clover", iconTheme: "clover" },
+      
+      { text: "Chúc các cậu gặp toàn chuyện may mắn và vạn điều như ý mỗi ngày ❤️🍀✨🌈", bg: "radial-gradient(circle, #0b3d18 0%, #050505 100%)", eyeState: "heart", track: 2, pos: "top", img: "anh_cua_ban.png", showSky: true, showElement: "big-heart", iconTheme: "love" },
+      { text: "Luôn là cô gái rạng rỡ và tự tin nhất nhé 👸🏻💎💖", bg: "radial-gradient(circle, #3d0b28 0%, #050505 100%)", eyeState: "fire", track: 2, pos: "left", showSky: true, showElement: "big-star", iconTheme: "star" },
+      { text: "Cảm ơn các cậu vì đã luôn là một phần tuyệt vời của tập thể 9.11 🏫🎒🎉", bg: "radial-gradient(circle, #1a082a 0%, #050505 100%)", eyeState: "happy", track: 2, pos: "top", showSky: true, showElement: "big-flower", iconTheme: "flower" },
+      { text: "Chúc các cậu có một ngày 20/10 thật tuyệt vời, ngập tràn hoa và quà nha 🥰🎉💖", bg: "radial-gradient(circle, #2a0820 0%, #050505 100%)", eyeState: "heart", track: 2, pos: "bottom", img: "anh_cua_ban.png", showSky: true, showElement: "big-heart", iconTheme: "love" }
+    ];
+
+    const startBtn = document.getElementById('start-btn');
+    const mainContent = document.getElementById('main-content');
+    const textDisplay = document.getElementById('text-display');
+    const bgLayer = document.getElementById('bg-layer');
+    const bgImageContainer = document.getElementById('bg-image-container');
+    const bgImage = document.getElementById('bg-image');
+    const dynamicElementWrapper = document.getElementById('dynamic-element-wrapper');
+    const dynamicAura = document.getElementById('dynamic-aura');
+    const dynamicContent = document.getElementById('dynamic-content');
+    const faceContainer = document.getElementById('face-container');
+    const eyeLeft = document.getElementById('eye-left');
+    const eyeRight = document.getElementById('eye-right');
+    const blushLeft = document.getElementById('blush-left');
+    const blushRight = document.getElementById('blush-right');
+    const hintText = document.getElementById('hint-text');
+
+    function setEyeState(state) {
+      eyeLeft.className = "eye left";
+      eyeRight.className = "eye right";
+      eyeLeft.innerHTML = '<div class="blush" id="blush-left">////</div>';
+      eyeRight.innerHTML = '<div class="blush" id="blush-right">////</div>';
+
+      if (state === "happy") {
+        eyeLeft.classList.add("happy");
+        eyeRight.classList.add("happy");
+      } else if (state === "blush") {
+        document.getElementById('blush-left').style.display = "block";
+        document.getElementById('blush-right').style.display = "block";
+        eyeLeft.classList.add("shy-animation");
+        eyeRight.classList.add("shy-animation");
+      } else if (state === "star") {
+        eyeLeft.classList.add("star");
+        eyeRight.classList.add("star");
+      } else if (state === "heart") {
+        eyeLeft.classList.add("heart");
+        eyeRight.classList.add("heart");
+        document.getElementById('blush-left').style.display = "block";
+        document.getElementById('blush-right').style.display = "block";
+      } else if (state === "wink") {
+        eyeLeft.classList.add("wink-left");
+        eyeRight.classList.add("star");
+      } else if (state === "surprised") {
+        eyeLeft.classList.add("surprised");
+        eyeRight.classList.add("surprised");
+      } else if (state === "cry") {
+        eyeLeft.classList.add("cry");
+        eyeRight.classList.add("cry");
+      } else if (state === "dizzy") {
+        eyeLeft.classList.add("dizzy");
+        eyeRight.classList.add("dizzy");
+      } else if (state === "sparkle") {
+        eyeLeft.classList.add("sparkle");
+        eyeRight.classList.add("sparkle");
+      } else if (state === "cool") {
+        eyeLeft.classList.add("cool");
+        eyeRight.classList.add("cool");
+      } else if (state === "fire") {
+        eyeLeft.classList.add("fire");
+        eyeRight.classList.add("fire");
+      }
+    }
+
+    function triggerBlink() {
+      if (!isAnimating) return;
+      eyeLeft.classList.add('blink');
+      eyeRight.classList.add('blink');
+      setTimeout(() => {
+        eyeLeft.classList.remove('blink');
+        eyeRight.classList.remove('blink');
+      }, 180);
+    }
+
+    function dynamicEyeTransition(targetState, callback) {
+      eyeLeft.classList.add("blink");
+      eyeRight.classList.add("blink");
+      
+      setTimeout(() => {
+        eyeLeft.classList.remove("blink");
+        eyeRight.classList.remove("blink");
+        setEyeState(targetState);
+        if (callback) callback();
+      }, 200);
+    }
+
+    let hasBlinkedThisSentence = false;
+
+    function typeWriter(text, index = 0, speed = 75, cb) {
+      if (index === 0) {
+        textDisplay.innerHTML = "";
+        hasBlinkedThisSentence = false;
+      }
+      
+      const midPoint = Math.floor(text.length / 2);
+      if (!hasBlinkedThisSentence && index === midPoint && text.length > 5) {
+        hasBlinkedThisSentence = true;
+        triggerBlink();
+      }
+
+      if (index < text.length) {
+        textDisplay.innerHTML = text.substring(0, index + 1);
+        setTimeout(() => typeWriter(text, index + 1, speed, cb), speed);
+      } else if (cb) {
+        cb();
+      }
+    }
+
+    function updateLayout(pos, hasElement) {
+      textDisplay.style.top = "auto";
+      textDisplay.style.bottom = "auto";
+      textDisplay.style.left = "auto";
+      textDisplay.style.right = "auto";
+      textDisplay.style.transform = "none";
+      textDisplay.style.textAlign = "center";
+
+      if (pos === "top") {
+        textDisplay.style.top = "15%";
+        textDisplay.style.left = "50%";
+        textDisplay.style.transform = "translateX(-50%)";
+        
+        faceContainer.style.top = "68%";
+        faceContainer.style.left = "50%";
+        faceContainer.style.transform = "translate(-50%, -50%)";
+
+        if (hasElement) {
+          dynamicElementWrapper.style.top = "42%";
+          dynamicElementWrapper.style.left = "50%";
+        }
+      } else if (pos === "bottom") {
+        textDisplay.style.bottom = "15%";
+        textDisplay.style.left = "50%";
+        textDisplay.style.transform = "translateX(-50%)";
+        
+        if (hasElement) {
+          faceContainer.style.top = "30%";
+          dynamicElementWrapper.style.top = "54%";
+        } else {
+          faceContainer.style.top = "42%";
+        }
+        faceContainer.style.left = "50%";
+        faceContainer.style.transform = "translate(-50%, -50%)";
+        dynamicElementWrapper.style.left = "50%";
+      } else if (pos === "left") {
+        textDisplay.style.top = "50%";
+        textDisplay.style.left = "10%";
+        textDisplay.style.transform = "translateY(-50%)";
+        textDisplay.style.textAlign = "left";
+        
+        faceContainer.style.top = "50%";
+        faceContainer.style.left = "75%";
+        faceContainer.style.transform = "translate(-50%, -50%)";
+
+        if (hasElement) {
+          dynamicElementWrapper.style.top = "50%";
+          dynamicElementWrapper.style.left = "45%";
+        }
+      } else if (pos === "right") {
+        textDisplay.style.top = "50%";
+        textDisplay.style.right = "10%";
+        textDisplay.style.transform = "translateY(-50%)";
+        textDisplay.style.textAlign = "right";
+        
+        faceContainer.style.top = "50%";
+        faceContainer.style.left = "25%";
+        faceContainer.style.transform = "translate(-50%, -50%)";
+
+        if (hasElement) {
+          dynamicElementWrapper.style.top = "50%";
+          dynamicElementWrapper.style.left = "55%";
+        }
+      }
+    }
+
+    let currentStep = 0;
+    let isAnimating = false;
+
+    function playAudioForStep(track) {
+      if (track === 1) {
+        audio2.pause();
+        audio2.currentTime = 0;
+        if (audio1.paused) {
+          audio1.play().catch(e => console.log(e));
+        }
+      } else if (track === 2) {
+        audio1.pause();
+        audio1.currentTime = 0;
+        if (audio2.paused) {
+          audio2.play().catch(e => console.log(e));
+        }
+      }
+    }
+
+    function renderElement(type) {
+      dynamicAura.className = "";
+      dynamicContent.innerHTML = "";
+
+      if (type === "clover") {
+        dynamicAura.className = "aura-clover";
+        dynamicContent.innerHTML = `
+          <div id="big-clover">
+            <div class="clover-leaf"></div>
+            <div class="clover-leaf"></div>
+            <div class="clover-leaf"></div>
+            <div class="clover-leaf"></div>
+            <div class="clover-stem"></div>
+          </div>
+        `;
+      } else if (type === "big-star") {
+        dynamicAura.className = "aura-star";
+        dynamicContent.innerHTML = `<div class="custom-icon" style="color: #ffd700; text-shadow: 0 0 25px #ffaa00;">★</div>`;
+      } else if (type === "big-heart") {
+        dynamicAura.className = "aura-heart";
+        dynamicContent.innerHTML = `<div class="custom-icon" style="animation: heartBeat 0.8s infinite alternate ease-in-out;">❤️</div>`;
+      } else if (type === "big-flower") {
+        dynamicAura.className = "aura-flower";
+        dynamicContent.innerHTML = `<div class="custom-icon">🌸</div>`;
+      }
+    }
+
+    function showStep() {
+      if (currentStep >= script.length) return;
+
+      isAnimating = true;
+      const step = script[currentStep];
+      bgLayer.style.background = step.bg;
+
+      spawnFloatingIcons(step.iconTheme || "default", step.pos);
+
+      if (step.showSky) {
+        skyContainer.classList.add('hien-thi');
+      } else {
+        skyContainer.classList.remove('hien-thi');
+      }
+
+      if (step.img) {
+        bgImage.style.backgroundImage = `url('${step.img}')`;
+        bgImageContainer.classList.add('hien-thi');
+      } else {
+        bgImageContainer.classList.remove('hien-thi');
+      }
+
+      if (step.showElement) {
+        renderElement(step.showElement);
+        dynamicElementWrapper.classList.add('hien-thi');
+      } else {
+        dynamicElementWrapper.classList.remove('hien-thi');
+      }
+
+      updateLayout(step.pos, !!step.showElement);
+      textDisplay.innerHTML = "";
+      playAudioForStep(step.track);
+
+      const typingSpeed = step.track === 1 ? 60 : 45;
+
+      dynamicEyeTransition(step.eyeState, () => {
+        typeWriter(step.text, 0, typingSpeed, () => {
+          isAnimating = false;
+        });
+      });
+    }
+
+    startBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      startBtn.style.display = 'none';
+      mainContent.style.display = 'flex';
+      hintText.style.display = 'block';
+      
+      showStep();
+    });
+
+    document.body.addEventListener('click', () => {
+      if (mainContent.style.display === 'flex' && !isAnimating) {
+        currentStep++;
+        showStep();
+      }
+    });
+  </script>
+</body>
+</html>
